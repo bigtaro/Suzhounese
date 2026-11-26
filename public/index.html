@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="使用 Qwen3-ASR 转写苏州话录音与音视频文件。"
+    />
+    <title>苏州话 ASR · Qwen3-ASR</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <div class="page">
+      <header class="masthead">
+        <a class="brand" href="/" aria-label="苏州话 ASR 首页">
+          <span class="seal" aria-hidden="true">苏</span>
+          <span class="brand-copy">
+            <strong>苏州话 ASR</strong>
+            <small>Qwen3-ASR workspace</small>
+          </span>
+        </a>
+        <div class="masthead-tools">
+          <label class="provider-picker" for="provider-select">
+            <span>模型</span>
+            <select id="provider-select" aria-label="选择语音识别模型"></select>
+          </label>
+          <span class="status-pill is-loading" id="service-status">
+            <span class="status-dot" aria-hidden="true"></span>
+            <span id="status-text">正在连接</span>
+          </span>
+        </div>
+      </header>
+
+      <main>
+        <section class="hero">
+          <div>
+            <p class="eyebrow">Speech to text · 苏州方言</p>
+            <h1>把苏州话，<br /><em>转成文字。</em></h1>
+          </div>
+          <p class="hero-copy">
+            录音或拖入一段音频，交给云端 Qwen3-ASR 或本地 Ollama 转写。识别结果可以
+            直接校对、复制，也可以下载为语料文本。
+          </p>
+        </section>
+
+        <section class="workspace" aria-label="语音识别工作区">
+          <article class="panel source-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="step-label">01 / 输入</p>
+                <h2>录一段，或选择文件</h2>
+              </div>
+              <span class="format-note" id="limit-hint">WAV · MP3 · M4A · WEBM</span>
+            </div>
+
+            <div
+              class="drop-zone"
+              id="drop-zone"
+              role="button"
+              tabindex="0"
+              aria-label="拖入音频，或按回车选择文件"
+            >
+              <input
+                id="file-input"
+                type="file"
+                accept="audio/*,video/*,.m4a,.mp3,.wav,.webm,.ogg,.flac,.mp4"
+                hidden
+              />
+
+              <div class="record-visual" id="record-visual" aria-hidden="true">
+                <span class="record-ring"></span>
+                <span class="record-core">
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path
+                      d="M12 15.5a3.5 3.5 0 0 0 3.5-3.5V6a3.5 3.5 0 1 0-7 0v6a3.5 3.5 0 0 0 3.5 3.5Z"
+                      stroke="currentColor"
+                      stroke-width="1.7"
+                    />
+                    <path
+                      d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M9 21h6"
+                      stroke="currentColor"
+                      stroke-width="1.7"
+                      stroke-linecap="round"
+                    />
+                  </svg>
+                </span>
+              </div>
+
+              <div class="drop-copy">
+                <h3 id="drop-title">点按麦克风开始录音</h3>
+                <p id="drop-hint">也可以把音频文件拖到这里</p>
+              </div>
+
+              <div class="source-actions">
+                <button class="button primary" id="record-button" type="button">
+                  开始录音
+                </button>
+                <button class="button secondary" id="file-button" type="button">
+                  选择文件
+                </button>
+              </div>
+            </div>
+
+            <div class="recording-panel" id="recording-panel" hidden>
+              <span class="live-dot" aria-hidden="true"></span>
+              <span>正在录音</span>
+              <strong id="recording-timer">00:00</strong>
+              <span class="recording-tip">再次点按按钮结束</span>
+            </div>
+
+            <div class="preview-panel" id="preview-panel" hidden>
+              <div class="preview-meta">
+                <div>
+                  <span class="preview-label">当前音频</span>
+                  <strong id="file-name">未选择文件</strong>
+                </div>
+                <button class="text-button" id="clear-button" type="button">
+                  清除
+                </button>
+              </div>
+              <audio id="audio-preview" controls preload="metadata"></audio>
+              <button class="button primary wide" id="transcribe-button" type="button">
+                识别这段音频
+              </button>
+            </div>
+
+            <div class="error-banner" id="error-banner" role="alert" hidden>
+              <span id="error-message"></span>
+              <button id="dismiss-error" type="button" aria-label="关闭错误提示">×</button>
+            </div>
+          </article>
+
+          <article class="panel result-panel">
+            <div class="panel-heading result-heading">
+              <div>
+                <p class="step-label">02 / 转写</p>
+                <h2>识别结果</h2>
+              </div>
+              <span class="result-meta" id="result-meta">等待音频</span>
+            </div>
+
+            <textarea
+              id="transcript"
+              spellcheck="false"
+              placeholder="识别结果会出现在这里。你可以直接在这里校对，再复制或下载。"
+              aria-label="语音识别结果"
+            ></textarea>
+
+            <div class="result-footer">
+              <span>输出为 UTF-8 文本</span>
+              <div class="result-actions">
+                <button class="button secondary" id="copy-button" type="button" disabled>
+                  复制
+                </button>
+                <button class="button secondary" id="download-button" type="button" disabled>
+                  下载 .txt
+                </button>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <aside class="setup-note" id="setup-note" hidden>
+          <div>
+            <p class="step-label">Setup</p>
+            <h2>还没有可用的模型</h2>
+            <p>
+              在项目根目录的 <code>.env</code> 中填入阿里云百炼 / DashScope 凭据，
+              或启动本地 Ollama 并拉取 <code>frozenlab/qwen3-asr:latest</code>，然后
+              重启服务。
+            </p>
+          </div>
+          <pre><code>cp .env.example .env
+# 编辑 .env，填入 QWEN_ASR_API_KEY
+# 或使用本地模型：
+ollama pull frozenlab/qwen3-asr:latest
+npm start</code></pre>
+        </aside>
+      </main>
+
+      <footer class="footer">
+        <span>音频在本地完成 16 kHz 单声道转换，再发送给模型。</span>
+        <span>Qwen3-ASR · Suzhounese corpus toolkit</span>
+      </footer>
+    </div>
+  </body>
+</html>
